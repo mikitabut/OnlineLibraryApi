@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "skipLibCheck": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noImplicitAny": false,
+        "suppressImplicitAnyIndexErrors": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "forceConsistentCasingInFileNames": false,
+        "sourceMap": true,
+        "inlineSources": true,
+        "noUnusedLocals": true,
+        "strictNullChecks": true,
+        "outDir": "./build",                       /* Redirect output structure to the directory. */
+        "lib": ["dom", "es6", "es2016.array.include", "es2017"],
+        "typeRoots": ["./node_modules/@types"]
+    },
+    "exclude": ["node_modules"],
+    "include": [
+        "app/*"
+    ],
+    "compileOnSave": false,
+    "buildOnSave": false
+}

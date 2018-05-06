@@ -1,0 +1,32 @@
+{
+  "rulesDirectory": ["node_modules/codelyzer"],
+  "rules": {
+    "arrow-parens": false,
+    "array-type": [true, "array"],
+    "interface-over-type-literal": false,
+    "interface-name": false,
+    "max-classes-per-file": false,
+    "max-line-length": [true, 140],
+    "member-access": false,
+    "member-ordering": [false],
+    "no-shadowed-variable": false,
+    "no-string-literal": false,
+    "ordered-imports": [false],
+    "indent": [true, "spaces", 4],
+    "quotemark": [true, "single", "avoid-escape"],
+    "space-before-function-paren": {
+      "options": {
+        "anonymous": "always",
+        "asyncArrow": "always",
+        "constructor": "never",
+        "method": "never",
+        "named": "never"
+      }
+    },
+    "space-within-parens": [false],
+    "object-literal-key-quotes": [true, "as-needed"],
+    "no-object-literal-type-assertion": false,
+    "no-submodule-imports": false
+  },
+  "extends": ["tslint:latest", "tslint-config-prettier"],
+}
