@@ -1,1 +1,0 @@
-{"version":3,"file":"constants.js","sourceRoot":"","sources":["../../../app/dto/constants.ts"],"names":[],"mappings":";;AAAa,QAAA,KAAK,GAAG,SAAS,CAAC;AAClB,QAAA,SAAS,GAAG,CAAC,CAAC,CAAC","sourcesContent":["export const EMPTY = '(EMPTY)';\r\nexport const EMPTY_AGE = -1;\r\n"]}
