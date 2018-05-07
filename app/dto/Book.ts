@@ -1,13 +1,11 @@
 import { EMPTY } from './constants';
 
 export class Book {
-    public id: number;
     public name: string;
     public author: Author;
     public simplePart: string;
 
-    constructor({ id, name, author, description }) {
-        this.id = id;
+    constructor({ name, author, description }) {
         this.name = name;
         this.author = author || new Author(EMPTY);
         this.simplePart = description || EMPTY;

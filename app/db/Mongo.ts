@@ -13,7 +13,7 @@ class MongoConnector {
         return this.db;
     }
 
-    public getBooksCollection() {
+    public getBooksDb() {
         return this.db!.db('books');
     }
 }
