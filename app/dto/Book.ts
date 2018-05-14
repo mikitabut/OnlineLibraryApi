@@ -2,19 +2,12 @@ import { EMPTY } from './constants';
 
 export class Book {
     public name: string;
-    public author: Author;
+    public authorName: string;
     public simplePart: string;
 
-    constructor({ name, author, description }) {
+    constructor({ name, authorName, description }) {
         this.name = name;
-        this.author = author || new Author(EMPTY);
+        this.authorName = authorName;
         this.simplePart = description || EMPTY;
-    }
-}
-
-export class Author {
-    public name: string;
-    constructor(name: string) {
-        this.name = name;
     }
 }
