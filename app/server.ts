@@ -1,4 +1,4 @@
-import { BooksController, LoginController, PdfController } from './controllers';
+import { BooksController, LoginController, PdfController, CipherController } from './controllers';
 import * as express from 'express';
 import * as dotenv from 'dotenv';
 // Create a new express application instance
@@ -11,6 +11,7 @@ app.use('/auth', LoginController);
 
 app.use('/books', BooksController);
 app.use('/pdf', PdfController);
+app.use('/cipher', CipherController);
 app.listen(port, () => {
     // Success callback
     // console.log(`Listening at http://localhost:${port}/`);
