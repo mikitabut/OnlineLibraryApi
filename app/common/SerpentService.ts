@@ -68,7 +68,20 @@ export class SerpentService {
         let b = [] as BitNumber[];
         b[0] = text;
         for (let i = 0; i < 31; i++) {
-            b[i + 1] = this.effectiveSerpent(b[i], K[i], i);
+            let x0 = new BitNumber(32);
+            let x1 = new BitNumber(32);
+            let x2 = new BitNumber(32);
+            let x3 = new BitNumber(32);
+
+            let arr = b[i].xor(K[i]).toSimpleBitArray();
+            x0.setBitPart(0, arr.slice(0, 32));
+            x1.setBitPart(32, arr.slice(32, 64));
+            x2.setBitPart(64, arr.slice(64, 96));
+            x3.setBitPart(96, arr.slice(96, 128));
+
+            arr = this.getSRes(x0, x1, x2, x3, i,  this.s).toSimpleBitArray();
+            b[i].setBitPart(0, arr);
+            b[i + 1] = this.effectiveSerpent(b[i]);
         }
         let x0 = new BitNumber(32);
         let x1 = new BitNumber(32);
@@ -100,13 +113,28 @@ export class SerpentService {
         x3.setBitPart(96, arr.slice(96, 128));
         b[31] = this.getSRes(x0,x1,x2,x3, 7, this.sInv).xor(K[31]);
         for (let i = 31; i > 0; i--) {
-            b[i - 1] = this.effectiveSerpentInv(b[i], K[i], i);
+
+            b[i - 1] = this.effectiveSerpentInv(b[i]);
+            x0.setBitPart(0, b[i-1].toSimpleBitArray().slice(0, 32));
+            x1.setBitPart(32, b[i-1].toSimpleBitArray().slice(32, 64));
+            x2.setBitPart(64, b[i-1].toSimpleBitArray().slice(64, 96));
+            x3.setBitPart(96, b[i-1].toSimpleBitArray().slice(96, 128));
+            arr = this.getSRes(x0, x1, x2, x3, i,  this.sInv).xor(K[i]).toSimpleBitArray();
+            x0.setBitPart(0, arr.slice(0, 32));
+            x1.setBitPart(0, arr.slice(32, 64));
+            x2.setBitPart(0, arr.slice(64, 96));
+            x3.setBitPart(0, arr.slice(96, 128));
+            b[i - 1].setBitPart(0, x0.toSimpleBitArray());
+            b[i - 1].setBitPart(32, x1.toSimpleBitArray());
+            b[i - 1].setBitPart(64, x2.toSimpleBitArray());
+            b[i - 1].setBitPart(96, x3.toSimpleBitArray());
+
         }
 
         return b[0];
     }
 
-    effectiveSerpent(b: BitNumber, k: BitNumber, i: number) {
+    effectiveSerpent(b: BitNumber) {
         const resultB = new BitNumber(128);
 
         let x0 = new BitNumber(32);
@@ -114,13 +142,7 @@ export class SerpentService {
         let x2 = new BitNumber(32);
         let x3 = new BitNumber(32);
 
-        let arr = b.xor(k).toSimpleBitArray();
-        x0.setBitPart(0, arr.slice(0, 32));
-        x1.setBitPart(32, arr.slice(32, 64));
-        x2.setBitPart(64, arr.slice(64, 96));
-        x3.setBitPart(96, arr.slice(96, 128));
-
-        arr = this.getSRes(x0, x1, x2, x3, i,  this.s).toSimpleBitArray();
+        let arr = b.toSimpleBitArray();
         x0.setBitPart(0, arr.slice(0, 32));
         x1.setBitPart(0, arr.slice(32, 64));
         x2.setBitPart(0, arr.slice(64, 96));
@@ -147,7 +169,7 @@ export class SerpentService {
         return resultB;
     }
 
-    effectiveSerpentInv(b: BitNumber, k: BitNumber, i: number) {
+    effectiveSerpentInv(b: BitNumber) {
         const resultB = new BitNumber(128);
 
         let x0 = new BitNumber(32);
@@ -173,12 +195,6 @@ export class SerpentService {
         x1 = x1.xor(x0).xor(x2);
         x2 = x2.cycleRightSdvig(3);
         x0 = x0.cycleRightSdvig(13);
-
-        arr = this.getSRes(x0, x1, x2, x3, i,  this.sInv).xor(k).toSimpleBitArray();
-        x0.setBitPart(0, arr.slice(0, 32));
-        x1.setBitPart(0, arr.slice(32, 64));
-        x2.setBitPart(0, arr.slice(64, 96));
-        x3.setBitPart(0, arr.slice(96, 128));
 
         const resultArr = [
             ...x0.toSimpleBitArray(),

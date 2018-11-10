@@ -18,6 +18,7 @@ router.get('/public-key', (req: Request, res: Response) => {
     setXhrHeader(res);
 
     const tests = BitNumber.tests();
+
     const someKey = '0101010010101010110100101010010101001010101001010101001010101001010101011010010101001010100101010100101010100101010100101010101101001010100101010010101010010101010010101010010101010110100101010010101001010101001010101001001010100101010100101010100100100101'
         .split('')
         .map(value => parseInt(value, 10));
@@ -34,7 +35,11 @@ router.get('/public-key', (req: Request, res: Response) => {
     const startText = someText;
     const chifratedText = serpServ.chipherText(text, key);
     const deshifratedText = serpServ.chipherTextInv(chifratedText, key);
-    res.status(200).send({ startText, chifratedText, deshifratedText });
+
+    const linear = serpServ.effectiveSerpent(text);
+
+
+    res.status(200).send({ text, chifratedText, deshifratedText, linear });
 });
 
 router.options('/*', (req: Request, res: Response) => {
