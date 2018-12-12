@@ -20,7 +20,7 @@ const router: Router = Router();
 router.use(busboy({ immediate: true }));
 //all books
 router.get('/', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.getAllBooks()
         .then(entities => {
@@ -29,7 +29,7 @@ router.get('/', (req: Request, res: Response) => {
         .catch(error => res.status(error.status).send({ data: error.statusText }));
 });
 router.post('/add', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
     const jwt = {} as Jwt;
     updateJwtToken(req).catch(error => {
         return res.status(error.status).send({ data: error.statusText });
@@ -75,7 +75,7 @@ router.post('/add', (req: Request, res: Response) => {
 });
 //get book by name
 router.get('/:name', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.getBookByName(req.params.name)
         .then(entities => {
@@ -85,7 +85,7 @@ router.get('/:name', (req: Request, res: Response) => {
 });
 //update book by name
 router.post('/:name', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
     const jwt = {} as Jwt;
     updateJwtToken(req).catch(error => {
         return res.status(error.status).send({ data: error.statusText });
@@ -112,7 +112,7 @@ router.post('/:name', (req: Request, res: Response) => {
     });
 });
 router.get('/searchFullWord/:searchphrase', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.searchFullBook(req.params.searchphrase)
         .then(entities => {
@@ -121,7 +121,7 @@ router.get('/searchFullWord/:searchphrase', (req: Request, res: Response) => {
         .catch(error => res.status(error.status).send({ data: error.statusText }));
 });
 router.get('/searchStartWord/:searchphrase', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.searchStartBook(req.params.searchphrase)
         .then(entities => {
@@ -130,7 +130,7 @@ router.get('/searchStartWord/:searchphrase', (req: Request, res: Response) => {
         .catch(error => res.status(error.status).send({ data: error.statusText }));
 });
 router.get('/searchFullWord/', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.getAllBooks()
         .then(entities => {
@@ -139,7 +139,7 @@ router.get('/searchFullWord/', (req: Request, res: Response) => {
         .catch(error => res.status(error.status).send({ data: error.statusText }));
 });
 router.get('/searchStartWord/', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     return SourceDB.getAllBooks()
         .then(entities => {
@@ -150,7 +150,7 @@ router.get('/searchStartWord/', (req: Request, res: Response) => {
 
 //getting user by username
 router.get('/user/:username', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     if (req.headers.authorization) {
     }
@@ -215,7 +215,7 @@ export function updateJwtToken(req: Request, jwtExch?: Jwt, username?: string) {
     }
 }
 router.options('/*', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     res.append('Access-Control-Allow-Headers', 'enctype');
     res.status(200).send({});

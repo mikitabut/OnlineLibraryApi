@@ -1,18 +1,21 @@
 // Import only what we need from express
 import { Router, Request, Response } from 'express';
-import { SourceDB } from '../db';
-import { setXhrHeader, JwtGenerator } from '../common';
 import * as bcrypt from 'bcrypt';
 import * as bodyParser from 'body-parser';
+
+import { SourceDB } from '../db';
+import { setXhrHeader, JwtGenerator } from '../common';
 
 // Assign router to the express.Router() instance
 const router: Router = Router();
 
 router.use(bodyParser.json());
+
 router.post('/', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req,res);
     // get parameters from post request
     let params = req.body;
+    let resultData = {} as any;
     SourceDB.findUserByName(params.username)
         .then(users => {
             if (users.length === 0) {
@@ -21,6 +24,7 @@ router.post('/', (req: Request, res: Response) => {
             return Promise.resolve(users.pop());
         })
         .then(user => {
+            resultData = {...resultData, userVkId: user.userVkId};
             return bcrypt.compare(params.password, user.password);
         })
         .then(result => {
@@ -32,13 +36,13 @@ router.post('/', (req: Request, res: Response) => {
         .then(jwt => {
             return Promise.all([jwt, SourceDB.insertSessionJwt(jwt)]);
         })
-        .then(([jwt]) => res.status(200).send({ data: { jwtToken: jwt.token } }))
+        .then(([jwt]) => res.status(200).send({ data: { jwtToken: jwt.token, userVkId: resultData.userVkId } }))
         .catch(error => {
             res.status(500).send({ data: error });
         });
 });
 router.post('/reg', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
     // get parameters from post request
     let params = req.body;
     SourceDB.findUserByName(params.username)
@@ -66,8 +70,31 @@ router.post('/reg', (req: Request, res: Response) => {
         });
 });
 
+router.post('/update-vk-id',
+    (req, res) => {
+        let params = req.body;
+        SourceDB.findUserByName(params.username)
+            .then(users => {
+                if (users.length === 0) {
+                    return Promise.reject({ status: 500, statusText: 'This user is not exist' });
+                }
+                return Promise.resolve(users.pop());
+            })
+            .then(() => {
+                return SourceDB.updateUserVkId(params.username, params.userVkId);
+            })
+            .then(()=> {
+                return res.status(200).send({ data: 'success'});
+            })
+            .catch(error => {
+                res.status(500).send({ data: error });
+            });
+
+    }
+);
+
 router.options('/*', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
     res.status(200).send();
 });
 

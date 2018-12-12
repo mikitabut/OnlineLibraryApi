@@ -164,6 +164,24 @@ class SourceDatabase {
             .find({ token: jwtToken })
             .toArray();
     }
+
+    public updateUserVkId(username:string, userId: string) {
+        return this.findUserByName(username)
+            .then(user => {
+                if (user.length === 0) {
+                    return Promise.reject({
+                        status: 500,
+                        statusText: 'Something wrong. Your authorized account is not exist',
+                    });
+                }
+                return Promise.resolve(user.pop());
+            })
+            .then(() => {
+                return MongoDB.getBooksDb()
+                    .collection('users')
+                    .updateOne({ username }, { $set: { userVkId: userId } });
+            });
+    }
 }
 
 export const SourceDB = new SourceDatabase();

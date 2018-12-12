@@ -17,7 +17,7 @@ router.use(bodyParser.json());
 //all books
 
 router.get('/:id', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
     let params = req.params;
     SourceDB.getBookById(params.id)
         .then(values => {
@@ -56,7 +56,7 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 router.options('/*', (req: Request, res: Response) => {
-    setXhrHeader(res);
+    setXhrHeader(req, res);
 
     res.append('Access-Control-Allow-Headers', 'enctype');
     res.status(200).send({});
