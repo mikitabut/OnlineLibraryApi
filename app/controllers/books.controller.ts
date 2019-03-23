@@ -1,12 +1,14 @@
 // Import only what we need from express
 import { Router, Request, Response } from 'express';
-import { SourceDB } from '../db';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { setXhrHeader } from '../common';
+import * as bodyParser from 'body-parser';
 import * as moment from 'moment';
 import * as busboy from 'connect-busboy';
+
+import { SourceDB } from '../db';
+import { setXhrHeader } from '../common';
 import { Jwt } from '../common/jwtGenerator';
 import { Book } from '../dto/Book';
 
@@ -16,7 +18,31 @@ const router: Router = Router();
 // The / here corresponds to the route that the WelcomeController
 // is mounted on in the server.ts file.
 // In this case it's /welcome
+router.post('/recommended', bodyParser.json(), (req: Request, res: Response) => {
+    let params = req.body;
+    SourceDB.findUserByName(params.username)
+        .then(users => {
+            if (users.length === 0) {
+                return Promise.reject({ status: 500, statusText: 'This user is not exist' });
+            }
+            return Promise.resolve(users.pop());
+        })
+        .then(async user => {
+            const {best20VkWords} = user;
+            const resultRecommendedBooks = [] as any[];
 
+            while(best20VkWords.length) {
+                const recommendedBooks = await SourceDB.searchStartBook(best20VkWords.pop());
+                if(recommendedBooks.length) {
+                    resultRecommendedBooks.push(...recommendedBooks);
+                }
+            }
+            return res.status(200).send({ books: resultRecommendedBooks})
+        })
+        .catch(error => {
+            res.status(500).send({ data: error });
+        });
+});
 router.use(busboy({ immediate: true }));
 //all books
 router.get('/', (req: Request, res: Response) => {

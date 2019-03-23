@@ -2,12 +2,99 @@
 import { Router, Request, Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import * as bodyParser from 'body-parser';
+const Queue = require('bee-queue');
+const axios = require('axios');
+var nlp = require('compromise')
 
 import { SourceDB } from '../db';
-import { setXhrHeader, JwtGenerator } from '../common';
+import { setXhrHeader, JwtGenerator, vkApiStartString, vkApiServiceKey, vkApiVersion } from '../common';
+
+function processVkWordsData(userVkWords) {
+  let result = {};
+
+  Object.keys(userVkWords).filter(key => {
+      if(key === 'postsCount') {
+          return false;
+      }
+      const resCount =  userVkWords[key].reduce((prevVal, curVal) => prevVal + curVal.count, 0);
+      return resCount > 2;
+    }).map(key => {
+      const concArr = userVkWords[key];
+      const idf = Math.log10(userVkWords.postsCount/concArr.length);
+      const tfidfFullWeight = concArr.reduce((prevValue, currentValue) => {
+
+          return prevValue + (currentValue.count/ currentValue.postWordsCount) * idf;
+      }, 0)
+      result = {
+        ...result,
+        [key]: tfidfFullWeight,
+      };
+  });
+  const sortedWeights =  Object.keys(result).sort((a,b) => {
+    return result[b] - result[a];
+  });
+
+  return sortedWeights.slice(0, 20);
+}
 
 // Assign router to the express.Router() instance
 const router: Router = Router();
+
+const AnalyzeTextQueue = new Queue('analyzeTextQueue');
+
+// Process jobs from as many servers or processes as you like
+AnalyzeTextQueue.process(async job => {
+  const users = await SourceDB.findUserByName(job.data.username);
+  if(users.length === 0) {
+      const errorMessage = 'User is not exist for this username: ' + job.data.username;
+      console.log(errorMessage);
+      throw new Error(errorMessage);
+  }
+
+  const user = users.pop();
+
+  const wallData = await axios.get(vkApiStartString + 'wall.get' + '?owner_id=' + user.userVkId + '&count=100' + '&access_token=' + vkApiServiceKey + '&v=' + vkApiVersion,
+      {
+          headers: {'Access-Control-Allow-Origin': '*'}
+      }
+  );
+  const wallItems = wallData.data.response.items as any[];
+
+  let vkWordsObject = user.userVkWords || {postsCount: 0};
+
+  wallItems.filter(el => el.text.length > 0).map(item => {
+      const text = item.text as string;
+      if(text) {
+        const wordsNounsLength = nlp(text).nouns().data().length;
+        const wordsVerbsLength = nlp(text).verbs().data().length;
+        const words = nlp(text).nouns().toSingular().data().map(value => value.main);
+
+        const postWordMap = {};
+        words.map(word => {
+            const lowercaseWord = word.toLowerCase();
+            postWordMap[lowercaseWord] = postWordMap[lowercaseWord] ? postWordMap[lowercaseWord] + 1: 1;
+        });
+
+        Object.keys(postWordMap).map(wordKey => {
+            let wordArr = vkWordsObject[wordKey] as any[] || [];
+            if(!wordArr.find(el => el.id === item.id)) {
+                wordArr.push({
+                    count:postWordMap[wordKey],
+                    postId: item.id,
+                    postWordsCount: wordsNounsLength + wordsVerbsLength,
+                });
+                vkWordsObject.postsCount = vkWordsObject.postsCount + 1;
+            }
+
+            vkWordsObject = {...vkWordsObject, [wordKey]: [...wordArr]};
+        })
+
+      }
+
+  })
+  const dataSaveToDB = { userVkWords: vkWordsObject, best20VkWords: processVkWordsData(vkWordsObject) };
+  return SourceDB.saveUserVkWords(job.data.username, dataSaveToDB.userVkWords, dataSaveToDB.best20VkWords);
+});
 
 router.use(bodyParser.json());
 
@@ -84,12 +171,13 @@ router.post('/update-vk-id',
                 return SourceDB.updateUserVkId(params.username, params.userVkId);
             })
             .then(()=> {
+                const job = AnalyzeTextQueue.createJob({username: params.username})
+                job.save();
                 return res.status(200).send({ data: 'success'});
             })
             .catch(error => {
                 res.status(500).send({ data: error });
             });
-
     }
 );
 
