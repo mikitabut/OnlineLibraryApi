@@ -55,12 +55,5 @@ router.get('/:id', (req: Request, res: Response) => {
     // });
 });
 
-router.options('/*', (req: Request, res: Response) => {
-    setXhrHeader(req, res);
-
-    res.append('Access-Control-Allow-Headers', 'enctype');
-    res.status(200).send({});
-});
-
 // Export the express.Router() instance to be used by server.ts
 export const PdfController: Router = router;
